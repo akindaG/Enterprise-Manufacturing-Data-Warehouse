@@ -1,0 +1,3 @@
+production_id,product_id,machine_id,factory_id,employee_id,shift_id,production_date,quantity,production_time,production_cost,defect_count
+PR001,P001,M001,F001,E001,S001,2026-08-01,100,120,25000,2
+PR002,P002,M002,F002,E002,S002,2026-08-01,80,90,15000,1
