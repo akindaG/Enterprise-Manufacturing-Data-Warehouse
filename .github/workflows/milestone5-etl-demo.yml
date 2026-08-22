@@ -1,0 +1,71 @@
+name: Milestone 5 ETL and SCD Demonstration
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  etl-demo:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: manufacturing_dw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d manufacturing_dw"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGPASSWORD: postgres
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/manufacturing_dw
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create warehouse schema
+        run: |
+          psql -h localhost -U postgres -d manufacturing_dw -f warehouse_database/dimension_tables.sql
+          psql -h localhost -U postgres -d manufacturing_dw -f warehouse_database/fact_tables.sql
+          psql -h localhost -U postgres -d manufacturing_dw -f warehouse_database/warehouse_schema.sql
+
+      - name: First ETL execution
+        run: python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01
+
+      - name: Capture warehouse state after Run 1
+        run: |
+          psql -h localhost -U postgres -d manufacturing_dw -c "SELECT machine_key, machine_id, factory_id, effective_date, expiry_date, is_current FROM dim_machine ORDER BY machine_id, machine_key;"
+          psql -h localhost -U postgres -d manufacturing_dw -c "SELECT * FROM fact_production ORDER BY production_key;"
+
+      - name: Second ETL execution
+        run: python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15
+
+      - name: Verify SCD Type 2 and incremental load
+        run: |
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM etl_run_log WHERE status='SUCCESS';")" -eq 2
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M001';")" -eq 2
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M001' AND factory_id='F001' AND is_current=FALSE;")" -eq 1
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M001' AND factory_id='F002' AND is_current=TRUE;")" -eq 1
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M002';")" -eq 1
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M003' AND is_current=TRUE;")" -eq 1
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM fact_production;")" -eq 4
+
+      - name: Show final SCD and analytical results
+        run: psql -h localhost -U postgres -d manufacturing_dw -f analytics/scd_verification.sql
