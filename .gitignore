@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.venv/
+venv/
+.env
+
+# Database
+*.sql.bak
+*.dump
+
+# Power BI
+*.pbix
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
