@@ -2,60 +2,88 @@
 
 [![Milestone 5 ETL and SCD Demonstration](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml/badge.svg)](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml)
 
-Academic and portfolio-grade Data Warehouse implementation for **CCS3307 Data Warehousing**.
+A complete **Data Warehouse implementation for CCS3307 Data Warehousing** demonstrating the full lifecycle of a manufacturing analytics solution.
 
-The project demonstrates the complete Data Warehouse lifecycle required by the assignment:
+The project combines academic Data Warehousing principles with industry-style practices including ETL automation, dimensional modelling, Slowly Changing Dimensions, historical analysis, analytical SQL, and dashboard preparation.
 
-```text
-Business Domain
-      ↓
-Business Requirements
-      ↓
-Source Systems
-      ↓
-OLTP Database
-      ↓
-Staging Layer
-      ↓
-ETL Pipeline
-      ↓
-Dimensional Model
-      ↓
-SCD Type 2
-      ↓
-Fact Loading
-      ↓
-Analytics
-```
+---
+
+# Project Overview
 
 ## Business Domain
 
-**Manufacturing Industry**
+**Enterprise Manufacturing Analytics**
 
-## Selected Business Process
+Manufacturing organisations generate operational data from production activities, machines, factories, employees, products, and shifts. Direct operational analysis makes historical comparison and trend analysis difficult.
 
-**Production Operations Analytics**
+This Data Warehouse provides a centralized analytical platform for production performance analysis.
 
-The Data Warehouse analyses manufacturing production events. The selected process measures production quantity, cost, time, defects, machine performance, factory performance and shift performance.
+---
 
-## Data Warehouse Design
+# Selected Business Process
 
-### Fact Table
+## Production Operations Analytics
+
+The selected business process is **manufacturing production operations**.
+
+Each production event records:
+
+- Product produced
+- Machine used
+- Factory location
+- Employee responsible
+- Production shift
+- Quantity produced
+- Production cost
+- Production duration
+- Defect information
+
+---
+
+# Data Warehouse Architecture
+
+```text
+Source Systems
+      ↓
+Staging Layer
+      ↓
+Validation & Transformation
+      ↓
+Dimension Loading
+      ↓
+SCD Type 2 Processing
+      ↓
+Fact Production Loading
+      ↓
+Analytics / Reporting
+      ↓
+Power BI Dashboard
+```
+
+---
+
+# Dimensional Model
+
+## Fact Table
 
 `Fact_Production`
 
-**Grain:** One row represents one completed production event for one product, produced by one machine, handled by one employee, during one shift, at one factory, on one production date.
+### Grain
 
-### Dimensions
+One row represents one completed production event for one product, produced by one machine, handled by one employee, during one shift, at one factory, on one production date.
 
-- `Dim_Date`
-- `Dim_Product`
-- `Dim_Machine`
-- `Dim_Factory`
-- `Dim_Employee`
-- `Dim_Shift`
+## Dimensions
 
-### Measures
+| Dimension | Purpose |
+|---|---|
+| Dim_Date | Time-based analysis |
+| Dim_Product | Product performance |
+| Dim_Machine | Machine analysis and history |
+| Dim_Factory | Factory comparison |
+| Dim_Employee | Workforce analysis |
+| Dim_Shift | Shift performance |
+
+## Measures
 
 - Quantity Produced
 - Production Cost
@@ -68,89 +96,150 @@ Generated measures:
 - Defect Rate
 - Cost Per Unit
 
-## ETL Implementation
+---
 
-Implemented pipeline:
+# ETL Pipeline
+
+The implemented ETL pipeline performs:
+
+1. Extract source data
+2. Load staging data
+3. Validate and clean records
+4. Transform data
+5. Load dimensions
+6. Generate surrogate keys
+7. Apply SCD Type 2 logic
+8. Load Fact_Production
+9. Validate warehouse results
+
+Pipeline:
 
 ```text
-Source CSV Files
-        ↓
-Staging Layer
-        ↓
-Validation and Cleaning
-        ↓
-Transformation
-        ↓
-Dimension Loading
-        ↓
-SCD Type 2 Processing
-        ↓
-Fact Production Loading
-        ↓
-Validation
+CSV Sources
+    ↓
+Staging
+    ↓
+Python ETL
+    ↓
+PostgreSQL Data Warehouse
+    ↓
+Analytics
 ```
 
-## SCD Type 2 Demonstration
+---
 
-`Dim_Machine` uses SCD Type 2.
+# SCD Type 2 Demonstration
 
-Two executions are demonstrated:
+`Dim_Machine` implements Slowly Changing Dimension Type 2.
 
-| Execution | Scenario |
-|---|---|
-| Run 1 | Initial warehouse loading |
-| Run 2 | Changed machine assignment, new machine record and unchanged records |
+## Run 1
 
-This demonstrates:
+```text
+Machine M001
+Factory Colombo
+Current Record = Yes
+```
 
-- Historical records
-- Surrogate key changes
-- New records
+## Run 2
+
+Source change:
+
+```text
+Machine M001
+Factory Kandy
+```
+
+Warehouse history:
+
+```text
+Previous Version
+Factory Colombo
+Current = No
+
+New Version
+Factory Kandy
+Current = Yes
+```
+
+Demonstrates:
+
+- Historical preservation
+- Surrogate keys
 - Changed records
+- New records
 - Unchanged records
 - Incremental loading
 
-## Technology Stack
+---
 
-- PostgreSQL
-- Python
-- Pandas
-- SQLAlchemy
-- SQL
-- GitHub Actions
-- Power BI
+# Analytical Capabilities
 
-## Repository Structure
+The warehouse supports analysis such as:
+
+- Monthly production trends
+- Factory performance comparison
+- Machine efficiency analysis
+- Product production ranking
+- Quality analysis
+- Historical machine tracking
+
+Analytical SQL files are available in:
 
 ```text
-oltp_database/       Source database scripts
-warehouse_database/  Star schema implementation
-source_data/         Run 1 and Run 2 source states
-etl_pipeline/        ETL implementation
-analytics/           Analytical SQL queries
-documentation/       Design and project documentation
-.github/             Automated validation workflow
+analytics/
 ```
 
-## Milestone Status
+---
+
+# Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| PostgreSQL | Data Warehouse database |
+| Python | ETL development |
+| Pandas | Data transformation |
+| SQLAlchemy | Database connectivity |
+| SQL | Analytical queries |
+| GitHub Actions | Automated validation |
+| Power BI | Dashboard visualization |
+
+---
+
+# Repository Structure
+
+```text
+oltp_database/          Source OLTP design
+source_data/            Run 1 and Run 2 datasets
+etl_pipeline/           ETL implementation
+warehouse_database/     Star schema implementation
+analytics/              Analytical queries
+documentation/          Project documentation
+.github/                CI/CD workflow
+```
+
+---
+
+# Milestone Progress
 
 | Milestone | Status |
 |---|---|
-| 1. Project Foundation | Complete |
-| 2. Business Requirements and DW Design | Complete |
-| 3. OLTP and Warehouse Database Implementation | Complete |
-| 4. ETL Pipeline Development | Complete |
-| 5. Two ETL Runs and SCD Type 2 Demonstration | Complete |
-| 6. Analytical Queries and Dashboard Design | Complete |
-| 7. Final Report and Evidence Package | In Progress |
+| 1. Project Foundation | ✅ Complete |
+| 2. Business Requirements and DW Design | ✅ Complete |
+| 3. OLTP and Warehouse Implementation | ✅ Complete |
+| 4. ETL Pipeline Development | ✅ Complete |
+| 5. SCD Type 2 and Two ETL Executions | ✅ Complete |
+| 6. Analytics and Dashboard Design | ✅ Complete |
+| 7. Final Report and Submission Package | 🔄 In Progress |
 
-## Assignment Alignment
+---
 
-The implementation satisfies the major CCS3307 requirements:
+# CCS3307 Requirement Coverage
 
-✅ One selected business process
+✅ Manufacturing business domain
 
-✅ One Fact Table
+✅ Single selected business process
+
+✅ Single Fact Table
 
 ✅ Fact grain definition
 
@@ -158,11 +247,11 @@ The implementation satisfies the major CCS3307 requirements:
 
 ✅ Surrogate keys
 
-✅ SCD Type 2 implementation
-
 ✅ Staging layer
 
 ✅ ETL pipeline
+
+✅ SCD Type 2 implementation
 
 ✅ Two pipeline executions
 
@@ -172,7 +261,9 @@ The implementation satisfies the major CCS3307 requirements:
 
 ✅ Business value demonstration
 
-## Execution
+---
+
+# Running the Project
 
 Install dependencies:
 
@@ -180,13 +271,42 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run ETL executions:
+Run ETL Run 1:
 
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01
+```
+
+Run ETL Run 2:
+
+```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15
 ```
 
-## Current Stage
+---
 
-Milestones 1-6 are completed. The remaining work is final report preparation, screenshots, Power BI evidence and submission packaging.
+# Final Development Stage
+
+Completed:
+
+- Data Warehouse design
+- OLTP and warehouse implementation
+- ETL pipeline
+- SCD Type 2 demonstration
+- Analytical SQL layer
+- Dashboard design
+
+Remaining:
+
+- Power BI dashboard final file
+- Final report
+- Evidence screenshots
+- Submission package
+
+---
+
+## Author
+
+**Akinda Gamage**
+
+CCS3307 Data Warehousing Project
