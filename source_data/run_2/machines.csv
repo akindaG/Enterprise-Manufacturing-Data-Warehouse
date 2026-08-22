@@ -1,0 +1,4 @@
+machine_id,machine_name,machine_type,factory_id,status
+M001,Assembly Machine A,Assembly,F002,Active
+M002,Cutting Machine B,Cutting,F002,Active
+M003,Packaging Machine C,Packaging,F001,Active
