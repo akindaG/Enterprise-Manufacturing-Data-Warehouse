@@ -1,66 +1,41 @@
 # ETL Pipeline
 
-This folder contains the ETL implementation and end-to-end execution logic for the Enterprise Manufacturing Data Warehouse.
+This folder contains the ETL implementation for the Enterprise Manufacturing Data Warehouse.
+
+## Authoritative Executable
+
+`run_etl.py` is the **authoritative end-to-end implementation** used by GitHub Actions and the two-run demonstration. The smaller module files (`extract.py`, `staging.py`, `transform.py`, `dimension_loader.py`, `scd_type2.py`, `fact_loader.py`, `validation.py`) are supporting/teaching helpers. Do not run them in sequence expecting them to replace the orchestrator.
 
 ## Pipeline Flow
 
 ```text
-Source CSV Files
-      -> Data Quality Validation
-      -> Staging Layer
-      -> Cleaning / Transformation
-      -> Dimension Loading
-      -> SCD Type 2 Processing
-      -> Historical Surrogate Key Resolution
-      -> Fact_Production Incremental Loading
-      -> Validation and Historical Analysis
+CSV Source-State Extracts
+      -> Clean and Validate
+      -> stg_* Tables
+      -> Date + Type 1 Dimensions
+      -> Machine SCD Type 2
+      -> Surrogate-Key Resolution
+      -> Fact_Production
+      -> ETL Run Log
+      -> Historical / Analytical Validation
 ```
-
-## Components
-
-- `extract.py` - source extraction helpers
-- `staging.py` - staging-layer helpers
-- `transform.py` - cleaning and standardization helpers
-- `dimension_loader.py` - dimension and surrogate-key helpers
-- `scd_type2.py` - SCD Type 2 helper logic
-- `fact_loader.py` - fact-loading helper logic
-- `validation.py` - data-quality helpers
-- `run_etl.py` - executable end-to-end ETL orchestrator used for the two-run demonstration
-
-## Executable Orchestrator
-
-`run_etl.py` performs the complete assessed flow:
-
-1. extracts all required source files
-2. cleans and validates the source state
-3. loads staging tables
-4. loads `Dim_Date`
-5. inserts or Type 1 updates the simple dimensions
-6. applies SCD Type 2 to `Dim_Machine`
-7. resolves dimension surrogate keys
-8. resolves the historical `Machine_Key` by production date
-9. loads new facts using `Production_ID` as the idempotency key
-10. writes the execution result to `etl_run_log`
 
 ## Data Quality Rules
 
-The orchestrator fails before warehouse loading when it detects:
+`run_etl.py` validates:
 
-- missing required columns
-- empty source datasets
-- null business keys
-- duplicate business keys within a source state
-- invalid production dates
-- negative measures
-- defect counts greater than the quantity produced
+- required files and columns
+- non-empty source entities
+- null/duplicate business keys
+- valid numeric measures
+- non-negative quantity, time, cost and defects
+- `Defect_Count <= Quantity`
+- parseable production dates
+- no production date later than the ETL run date
+- Product, Machine, Factory, Employee and Shift references
+- production-event factory consistency with the source-state machine assignment
 
-## Incremental Fact Loading
-
-`Production_ID` is carried from the source into `Fact_Production` as a degenerate dimension / transaction identifier. The ETL checks this identifier before insertion, and the warehouse schema also enforces it as unique.
-
-This prevents duplicate facts during reruns without incorrectly collapsing two legitimate production events that happen to share the same measures and dimension keys.
-
-## Milestone 5 Demonstration
+## Environment Configuration
 
 Install dependencies:
 
@@ -68,28 +43,44 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the initial source state:
+Copy the template:
+
+```bash
+cp .env.example .env
+```
+
+The ETL accepts either `DATABASE_URL` or the individual `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` values. `DATABASE_URL` takes precedence.
+
+## Run 1
 
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01
 ```
 
-Run the changed source state:
+Initial state:
+
+- M001 assigned to F001
+- M002 assigned to F002
+- PR001 and PR002 loaded
+
+## Run 2
 
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15
 ```
 
-The second source state demonstrates:
+Later state:
 
-- M001 changes from factory F001 to F002 and receives a new SCD Type 2 surrogate key
-- M002 remains unchanged and does not receive another version
-- M003 is inserted as a new dimension entity
+- M001 changes F001 -> F002 and receives a new SCD Type 2 version
+- M002 remains unchanged
+- M003 is new
 - PR003 and PR004 are loaded incrementally
-- historical M001 production remains linked to the original machine version
 
-Use `analytics/scd_verification.sql` to inspect the result.
+## Verification
 
-## Automated Verification
+```bash
+psql -U postgres -d manufacturing_dw -f analytics/scd_verification.sql
+psql -U postgres -d manufacturing_dw -f analytics/production_kpi_analysis.sql
+```
 
-`.github/workflows/milestone5-etl-demo.yml` provisions PostgreSQL and performs both ETL executions automatically. It checks SCD history, fact counts, unique production identifiers and historical surrogate-key resolution.
+The GitHub Actions workflow performs the same two-run demonstration automatically and uploads a `milestone5-etl-evidence` artifact containing ETL logs, machine history, historical fact relationships and analytical output.

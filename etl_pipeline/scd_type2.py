@@ -1,19 +1,38 @@
-"""Slowly Changing Dimension Type 2 implementation."""
+"""Reusable Slowly Changing Dimension Type 2 helper functions.
 
-from datetime import datetime
+The executable database implementation lives in run_etl.py. These pure helpers are
+kept separately so the SCD comparison and version semantics can be tested or reused.
+"""
+
+from __future__ import annotations
+
+from datetime import date, timedelta
+
+TRACKED_MACHINE_FIELDS = ("machine_name", "machine_type", "factory_id", "status")
 
 
-def detect_change(old_record, new_record):
-    return old_record != new_record
+def has_tracked_change(old_record: dict, new_record: dict) -> bool:
+    """Return True when any tracked machine attribute has changed."""
+    return any(
+        str(old_record.get(field)) != str(new_record.get(field))
+        for field in TRACKED_MACHINE_FIELDS
+    )
 
 
-def create_new_version(record):
+def expire_version(record: dict, new_effective_date: date) -> dict:
+    """Return an expired copy of an existing SCD Type 2 record."""
     return {
         **record,
-        "effective_date": datetime.now(),
-        "current_flag": True
+        "expiry_date": new_effective_date - timedelta(days=1),
+        "is_current": False,
     }
 
 
-if __name__ == "__main__":
-    print("SCD Type 2 module ready")
+def create_new_version(record: dict, effective_date: date) -> dict:
+    """Return a current SCD Type 2 version using project date semantics."""
+    return {
+        **record,
+        "effective_date": effective_date,
+        "expiry_date": date(9999, 12, 31),
+        "is_current": True,
+    }

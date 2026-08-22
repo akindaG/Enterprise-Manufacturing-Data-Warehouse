@@ -1,61 +1,79 @@
 # Enterprise Manufacturing Data Warehouse Project Plan
 
-## Phase 1: Business Analysis
+## Phase 1 . Business Analysis . Complete
 
-- Define manufacturing scenario
-- Document production operations process
-- Identify business requirements
-- Identify source systems
+- define manufacturing domain and major business processes
+- select Production Operations Analytics as the single process
+- document business requirements, analytical questions and business value
+- identify source data and selection rationale
 
-## Phase 2: Source Database Design
+## Phase 2 . Source / OLTP Design . Complete
 
-Create OLTP tables:
+- create Product, Factory, Machine, Employee, Shift and Production_Order tables
+- define primary/foreign keys and relationships
+- provide representative initial operational data
+- provide reproducible Run 1 and Run 2 CSV extracts
 
-- Product
-- Machine
-- Factory
-- Employee
-- Shift
-- Production_Order
+## Phase 3 . Dimensional Data Warehouse . Complete
 
-## Phase 3: Data Warehouse Design
+- implement `Fact_Production`
+- define event-level grain
+- implement Date, Product, Machine, Factory, Employee and Shift dimensions
+- implement surrogate keys and foreign-key relationships
+- document star-schema rationale
 
-Implement star schema:
+## Phase 4 . ETL and Historical Processing . Complete
 
-Fact:
-- Fact_Production
+- extract source snapshots
+- clean, validate and stage data
+- load dimensions before facts
+- apply Type 1 updates where appropriate
+- implement Machine SCD Type 2
+- perform date-aware historical Machine_Key lookup
+- load facts incrementally by Production_ID
 
-Dimensions:
-- Dim_Date
-- Dim_Product
-- Dim_Machine
-- Dim_Factory
-- Dim_Employee
-- Dim_Shift
+## Phase 5 . Two-Run Demonstration and Testing . Complete
 
-## Phase 4: ETL Development
+- Run 1 initial load
+- Run 2 changed source state
+- demonstrate M001 changed, M002 unchanged and M003 new
+- preserve historical M001 version
+- validate incremental fact loading
+- automate the scenario with GitHub Actions
+- export CI evidence artifact
 
-Pipeline stages:
+## Phase 6 . Analytics and Dashboard Specification . Complete
 
-1. Extract source data
-2. Load staging layer
-3. Clean and transform data
-4. Generate surrogate keys
-5. Process SCD Type 2
-6. Load fact table
+- analytical KPI SQL
+- generated measures
+- factory, product, machine, monthly and shift analysis
+- historical SCD comparison
+- documented analytical results
+- Power BI page/model/DAX specification
 
-## Phase 5: Analytics
+## Phase 7 . Final Submission . In Progress
 
-Deliver:
+Completed:
 
-- SQL analytical queries
-- Power BI dashboard
-- Business insights
+- detailed Markdown report draft aligned to lecturer headings
+- architecture documentation
+- evidence checklist
+- repository alignment audit
 
-## Phase 6: Portfolio Enhancements
+Remaining manual deliverables:
 
-Optional additions:
+- actual Power BI `.pbix`
+- execution/dashboard screenshots
+- final PDF export
+- presentation deck
+- final project ZIP
 
-- Docker deployment
+## Optional Portfolio Enhancements . After Academic Submission
+
+Only after the required project is complete:
+
+- Docker local environment
 - Airflow orchestration
-- Machine learning extension
+- larger synthetic data volume
+- data observability metrics
+- predictive-maintenance extension

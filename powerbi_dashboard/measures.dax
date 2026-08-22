@@ -1,0 +1,19 @@
+// Enterprise Manufacturing Analytics . Power BI Measures
+
+Production Events = DISTINCTCOUNT(Fact_Production[Production_ID])
+
+Total Units = SUM(Fact_Production[Quantity_Produced])
+
+Total Cost = SUM(Fact_Production[Production_Cost])
+
+Total Production Minutes = SUM(Fact_Production[Production_Time])
+
+Total Defects = SUM(Fact_Production[Defect_Count])
+
+Good Units = [Total Units] - [Total Defects]
+
+Defect Rate % = DIVIDE([Total Defects], [Total Units], 0) * 100
+
+Cost Per Unit = DIVIDE([Total Cost], [Total Units], 0)
+
+Units Per Production Minute = DIVIDE([Total Units], [Total Production Minutes], 0)

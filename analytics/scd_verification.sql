@@ -1,4 +1,4 @@
--- Milestone 5: SCD Type 2, incremental-load and fact-idempotency verification
+-- SCD Type 2, incremental-load and fact-idempotency verification
 
 -- 1. Verify both ETL executions were logged.
 SELECT run_id, executed_at, run_date, source_dir, status,
@@ -8,24 +8,24 @@ ORDER BY run_id;
 
 -- 2. Verify M001 has two historical versions after Run 2.
 SELECT machine_key, machine_id, machine_name, machine_type,
-       factory_id, effective_date, expiry_date, is_current
+       factory_id, machine_status, effective_date, expiry_date, is_current
 FROM dim_machine
 WHERE machine_id = 'M001'
 ORDER BY effective_date, machine_key;
 
 -- Expected after Run 2:
--- old version: M001 -> F001, is_current = false
--- new version: M001 -> F002, is_current = true
+-- old version: M001 -> F001, effective 2026-08-01, expiry 2026-08-14, is_current = false
+-- new version: M001 -> F002, effective 2026-08-15, expiry 9999-12-31, is_current = true
 
 -- 3. Verify M002 stayed unchanged with one current version.
-SELECT machine_key, machine_id, factory_id,
+SELECT machine_key, machine_id, factory_id, machine_status,
        effective_date, expiry_date, is_current
 FROM dim_machine
 WHERE machine_id = 'M002'
 ORDER BY machine_key;
 
 -- 4. Verify M003 was inserted as a new entity during Run 2.
-SELECT machine_key, machine_id, factory_id,
+SELECT machine_key, machine_id, factory_id, machine_status,
        effective_date, expiry_date, is_current
 FROM dim_machine
 WHERE machine_id = 'M003';
@@ -67,8 +67,12 @@ HAVING COUNT(*) > 1;
 -- 7. Historical comparison for M001 before and after the factory transfer.
 SELECT
     d.full_date,
+    m.machine_key,
     m.machine_id,
     m.factory_id,
+    m.effective_date,
+    m.expiry_date,
+    m.is_current,
     SUM(f.quantity_produced) AS total_quantity,
     SUM(f.production_cost) AS total_cost,
     SUM(f.defect_count) AS total_defects
@@ -76,5 +80,6 @@ FROM fact_production f
 JOIN dim_date d ON d.date_key = f.date_key
 JOIN dim_machine m ON m.machine_key = f.machine_key
 WHERE m.machine_id = 'M001'
-GROUP BY d.full_date, m.machine_id, m.factory_id
+GROUP BY d.full_date, m.machine_key, m.machine_id, m.factory_id,
+         m.effective_date, m.expiry_date, m.is_current
 ORDER BY d.full_date;

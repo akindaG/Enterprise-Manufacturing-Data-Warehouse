@@ -41,7 +41,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Compile ETL code
-        run: python -m py_compile etl_pipeline/run_etl.py
+        run: python -m py_compile etl_pipeline/*.py
 
       - name: Create warehouse schema
         run: |
@@ -54,7 +54,7 @@ jobs:
 
       - name: Capture warehouse state after Run 1
         run: |
-          psql -h localhost -U postgres -d manufacturing_dw -c "SELECT machine_key, machine_id, factory_id, effective_date, expiry_date, is_current FROM dim_machine ORDER BY machine_id, machine_key;"
+          psql -h localhost -U postgres -d manufacturing_dw -c "SELECT machine_key, machine_id, factory_id, machine_status, effective_date, expiry_date, is_current FROM dim_machine ORDER BY machine_id, machine_key;"
           psql -h localhost -U postgres -d manufacturing_dw -c "SELECT production_key, production_id, machine_key, factory_key, quantity_produced, production_cost, production_time, defect_count FROM fact_production ORDER BY production_key;"
 
       - name: Second ETL execution
@@ -68,6 +68,7 @@ jobs:
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M001' AND factory_id='F002' AND is_current=TRUE;")" -eq 1
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M002';")" -eq 1
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_id='M003' AND is_current=TRUE;")" -eq 1
+          test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM dim_machine WHERE machine_status='Active';")" -eq 4
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM fact_production;")" -eq 4
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(DISTINCT production_id) FROM fact_production;")" -eq 4
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM (SELECT production_id FROM fact_production GROUP BY production_id HAVING COUNT(*) > 1) d;")" -eq 0
@@ -77,5 +78,22 @@ jobs:
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM fact_production f JOIN dim_machine m ON m.machine_key=f.machine_key WHERE f.production_id='PR001' AND m.machine_id='M001' AND m.factory_id='F001';")" -eq 1
           test "$(psql -h localhost -U postgres -d manufacturing_dw -tAc "SELECT COUNT(*) FROM fact_production f JOIN dim_machine m ON m.machine_key=f.machine_key WHERE f.production_id='PR003' AND m.machine_id='M001' AND m.factory_id='F002';")" -eq 1
 
-      - name: Show final SCD and analytical results
-        run: psql -h localhost -U postgres -d manufacturing_dw -f analytics/scd_verification.sql
+      - name: Run analytical verification
+        run: |
+          psql -h localhost -U postgres -d manufacturing_dw -f analytics/scd_verification.sql
+          psql -h localhost -U postgres -d manufacturing_dw -f analytics/production_kpi_analysis.sql
+
+      - name: Build reproducible evidence artifact
+        run: |
+          mkdir -p ci_evidence
+          psql -h localhost -U postgres -d manufacturing_dw --csv -c "SELECT run_id, run_date, source_dir, status, facts_inserted, machine_versions_created FROM etl_run_log ORDER BY run_id;" > ci_evidence/etl_run_log.csv
+          psql -h localhost -U postgres -d manufacturing_dw --csv -c "SELECT machine_key, machine_id, machine_name, machine_type, factory_id, machine_status, effective_date, expiry_date, is_current FROM dim_machine ORDER BY machine_id, effective_date;" > ci_evidence/dim_machine_history.csv
+          psql -h localhost -U postgres -d manufacturing_dw --csv -c "SELECT f.production_id, d.full_date, m.machine_key, m.machine_id, m.factory_id AS machine_factory, fac.factory_id AS production_factory, f.quantity_produced, f.production_cost, f.production_time, f.defect_count FROM fact_production f JOIN dim_date d ON d.date_key=f.date_key JOIN dim_machine m ON m.machine_key=f.machine_key JOIN dim_factory fac ON fac.factory_key=f.factory_key ORDER BY d.full_date, f.production_id;" > ci_evidence/fact_history.csv
+          psql -h localhost -U postgres -d manufacturing_dw -f analytics/production_kpi_analysis.sql > ci_evidence/analytical_results.txt
+
+      - name: Upload ETL evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: milestone5-etl-evidence
+          path: ci_evidence/
+          retention-days: 30
