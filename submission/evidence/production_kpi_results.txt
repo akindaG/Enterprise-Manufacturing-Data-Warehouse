@@ -1,0 +1,41 @@
+ production_events | total_units | total_defects | good_units | defect_rate_pct | total_cost | cost_per_unit | total_production_minutes 
+-------------------+-------------+---------------+------------+-----------------+------------+---------------+--------------------------
+                 4 |         385 |             7 |        378 |            1.82 |   85000.00 |        220.78 |                      425
+(1 row)
+
+ factory_id | factory_name  | units_produced | good_units | production_cost | defects | defect_rate_pct | cost_per_unit 
+------------+---------------+----------------+------------+-----------------+---------+-----------------+---------------
+ F001       | Colombo Plant |            195 |        190 |        43000.00 |       5 |            2.56 |        220.51
+ F002       | Kandy Plant   |            190 |        188 |        42000.00 |       2 |            1.05 |        221.05
+(2 rows)
+
+ product_id |  product_name   | quantity | good_quantity |   cost   | defects | defect_rate_pct 
+------------+-----------------+----------+---------------+----------+---------+-----------------
+ P001       | Industrial Pump |      210 |           207 | 52000.00 |       3 |            1.43
+ P002       | Control Valve   |      175 |           171 | 33000.00 |       4 |            2.29
+(2 rows)
+
+ machine_id |    machine_name     | output | production_minutes | defects | units_per_minute 
+------------+---------------------+--------+--------------------+---------+------------------
+ M003       | Packaging Machine C |     95 |                100 |       3 |             0.95
+ M001       | Assembly Machine A  |    210 |                235 |       3 |             0.89
+ M002       | Cutting Machine B   |     80 |                 90 |       1 |             0.89
+(3 rows)
+
+ year | month | monthly_output | monthly_cost | monthly_defects 
+------+-------+----------------+--------------+-----------------
+ 2026 |     8 |            385 |     85000.00 |               7
+(1 row)
+
+ shift_id | shift_name | output |   cost   | defects | defect_rate_pct 
+----------+------------+--------+----------+---------+-----------------
+ S001     | Morning    |    210 | 52000.00 |       3 |            1.43
+ S002     | Evening    |    175 | 33000.00 |       4 |            2.29
+(2 rows)
+
+ full_date  | machine_key | machine_id | assigned_factory_at_that_time | machine_status | actual_production_factory | output |   cost   | defects 
+------------+-------------+------------+-------------------------------+----------------+---------------------------+--------+----------+---------
+ 2026-08-01 |           1 | M001       | F001                          | Active         | F001                      |    100 | 25000.00 |       2
+ 2026-08-15 |           3 | M001       | F002                          | Active         | F002                      |    110 | 27000.00 |       1
+(2 rows)
+

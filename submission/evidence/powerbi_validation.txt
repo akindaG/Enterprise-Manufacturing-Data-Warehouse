@@ -1,0 +1,42 @@
+ production_events | total_units | total_defects | good_units | total_cost | defect_rate_pct | cost_per_unit | units_per_production_minute 
+-------------------+-------------+---------------+------------+------------+-----------------+---------------+-----------------------------
+                 4 |         385 |             7 |        378 |   85000.00 |            1.82 |        220.78 |                        0.91
+(1 row)
+
+ factory_id | factory_name  | total_units | total_defects | good_units | total_cost | defect_rate_pct | cost_per_unit 
+------------+---------------+-------------+---------------+------------+------------+-----------------+---------------
+ F001       | Colombo Plant |         195 |             5 |        190 |   43000.00 |            2.56 |        220.51
+ F002       | Kandy Plant   |         190 |             2 |        188 |   42000.00 |            1.05 |        221.05
+(2 rows)
+
+ product_id |  product_name   | total_units | total_defects | total_cost | defect_rate_pct 
+------------+-----------------+-------------+---------------+------------+-----------------
+ P001       | Industrial Pump |         210 |             3 |   52000.00 |            1.43
+ P002       | Control Valve   |         175 |             4 |   33000.00 |            2.29
+(2 rows)
+
+ shift_id | shift_name | total_units | total_defects | defect_rate_pct 
+----------+------------+-------------+---------------+-----------------
+ S001     | Morning    |         210 |             3 |            1.43
+ S002     | Evening    |         175 |             4 |            2.29
+(2 rows)
+
+ machine_id |    machine_name     | total_units | total_production_minutes | total_defects | units_per_production_minute 
+------------+---------------------+-------------+--------------------------+---------------+-----------------------------
+ M001       | Assembly Machine A  |         210 |                      235 |             3 |                        0.89
+ M002       | Cutting Machine B   |          80 |                       90 |             1 |                        0.89
+ M003       | Packaging Machine C |          95 |                      100 |             3 |                        0.95
+(3 rows)
+
+ machine_key | machine_id |    machine_name    | machine_type | factory_id | machine_status | effective_date | expiry_date | is_current 
+-------------+------------+--------------------+--------------+------------+----------------+----------------+-------------+------------
+           1 | M001       | Assembly Machine A | Assembly     | F001       | Active         | 2026-08-01     | 2026-08-14  | f
+           3 | M001       | Assembly Machine A | Assembly     | F002       | Active         | 2026-08-15     | 9999-12-31  | t
+(2 rows)
+
+ production_id | production_date | machine_key | machine_id | historical_machine_factory | production_factory | quantity_produced | production_cost | defect_count 
+---------------+-----------------+-------------+------------+----------------------------+--------------------+-------------------+-----------------+--------------
+ PR001         | 2026-08-01      |           1 | M001       | F001                       | F001               |               100 |        25000.00 |            2
+ PR003         | 2026-08-15      |           3 | M001       | F002                       | F002               |               110 |        27000.00 |            1
+(2 rows)
+
