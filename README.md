@@ -14,7 +14,7 @@ The project combines academic Data Warehousing principles with industry-style pr
 
 **Enterprise Manufacturing Analytics**
 
-Manufacturing organisations generate operational data from production activities, machines, factories, employees, products, and shifts. Direct operational analysis makes historical comparison and trend analysis difficult.
+Manufacturing organisations generate operational data from production activities, machines, factories, employees, products, and shifts. Direct operational systems make historical analysis and business intelligence difficult.
 
 This Data Warehouse provides a centralized analytical platform for production performance analysis.
 
@@ -40,7 +40,19 @@ Each production event records:
 
 ---
 
-# Data Warehouse Architecture
+# Enterprise Data Warehouse Architecture
+
+```mermaid
+flowchart LR
+    A[Manufacturing Source Systems] --> B[Staging Layer]
+    B --> C[ETL Pipeline Python]
+    C --> D[Data Warehouse PostgreSQL]
+    D --> E[Star Schema]
+    E --> F[Analytics SQL]
+    F --> G[Power BI Dashboard]
+```
+
+## Architecture Flow
 
 ```text
 Source Systems
@@ -62,7 +74,61 @@ Power BI Dashboard
 
 ---
 
+# OLTP Source Database Design
+
+The operational source system contains manufacturing transaction data.
+
+```mermaid
+erDiagram
+    PRODUCT ||--o{ PRODUCTION_ORDER : contains
+    MACHINE ||--o{ PRODUCTION_ORDER : performs
+    FACTORY ||--o{ PRODUCTION_ORDER : located_at
+    EMPLOYEE ||--o{ PRODUCTION_ORDER : manages
+    SHIFT ||--o{ PRODUCTION_ORDER : scheduled_in
+
+    PRODUCT {
+      int Product_ID
+      string Product_Name
+      string Category
+    }
+
+    MACHINE {
+      int Machine_ID
+      string Machine_Name
+      string Factory
+    }
+
+    PRODUCTION_ORDER {
+      int Production_ID
+      int Quantity
+      decimal Cost
+      date Production_Date
+    }
+```
+
+---
+
 # Dimensional Model
+
+## Star Schema
+
+```mermaid
+flowchart TB
+    F[Fact_Production]
+    D1[Dim_Date]
+    D2[Dim_Product]
+    D3[Dim_Machine]
+    D4[Dim_Factory]
+    D5[Dim_Employee]
+    D6[Dim_Shift]
+
+    D1 --> F
+    D2 --> F
+    D3 --> F
+    D4 --> F
+    D5 --> F
+    D6 --> F
+```
 
 ## Fact Table
 
@@ -98,7 +164,19 @@ Generated measures:
 
 ---
 
-# ETL Pipeline
+# ETL Pipeline Design
+
+```mermaid
+flowchart LR
+    A[CSV Source Files] --> B[Extract]
+    B --> C[Staging Tables]
+    C --> D[Data Validation]
+    D --> E[Transformation]
+    E --> F[Dimension Loading]
+    F --> G[SCD Type 2 Processing]
+    G --> H[Fact Loading]
+    H --> I[Analytics Layer]
+```
 
 The implemented ETL pipeline performs:
 
@@ -112,25 +190,27 @@ The implemented ETL pipeline performs:
 8. Load Fact_Production
 9. Validate warehouse results
 
-Pipeline:
-
-```text
-CSV Sources
-    ↓
-Staging
-    ↓
-Python ETL
-    ↓
-PostgreSQL Data Warehouse
-    ↓
-Analytics
-```
-
 ---
 
-# SCD Type 2 Demonstration
+# Slowly Changing Dimension Type 2
 
-`Dim_Machine` implements Slowly Changing Dimension Type 2.
+`Dim_Machine` implements SCD Type 2 historical tracking.
+
+```mermaid
+sequenceDiagram
+    participant S as Source System
+    participant E as ETL Pipeline
+    participant W as Warehouse
+
+    S->>E: Machine M001 Factory Colombo
+    E->>W: Insert Version 1
+    Note right of W: Current = Yes
+
+    S->>E: Machine M001 Factory Kandy
+    E->>W: Expire Version 1
+    E->>W: Insert Version 2
+    Note right of W: Historical record preserved
+```
 
 ## Run 1
 
@@ -141,8 +221,6 @@ Current Record = Yes
 ```
 
 ## Run 2
-
-Source change:
 
 ```text
 Machine M001
@@ -161,20 +239,11 @@ Factory Kandy
 Current = Yes
 ```
 
-Demonstrates:
-
-- Historical preservation
-- Surrogate keys
-- Changed records
-- New records
-- Unchanged records
-- Incremental loading
-
 ---
 
 # Analytical Capabilities
 
-The warehouse supports analysis such as:
+The warehouse supports:
 
 - Monthly production trends
 - Factory performance comparison
@@ -235,37 +304,23 @@ documentation/          Project documentation
 
 # CCS3307 Requirement Coverage
 
-✅ Manufacturing business domain
-
-✅ Single selected business process
-
-✅ Single Fact Table
-
-✅ Fact grain definition
-
-✅ Dimension modelling
-
-✅ Surrogate keys
-
-✅ Staging layer
-
-✅ ETL pipeline
-
-✅ SCD Type 2 implementation
-
-✅ Two pipeline executions
-
-✅ Historical data demonstration
-
-✅ Analytical queries
-
+✅ Manufacturing business domain  
+✅ Single selected business process  
+✅ Single Fact Table  
+✅ Fact grain definition  
+✅ Dimension modelling  
+✅ Surrogate keys  
+✅ Staging layer  
+✅ ETL pipeline  
+✅ SCD Type 2 implementation  
+✅ Two pipeline executions  
+✅ Historical data demonstration  
+✅ Analytical queries  
 ✅ Business value demonstration
 
 ---
 
 # Running the Project
-
-Install dependencies:
 
 ```bash
 pip install -r requirements.txt
