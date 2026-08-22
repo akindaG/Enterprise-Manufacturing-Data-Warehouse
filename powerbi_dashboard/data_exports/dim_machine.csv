@@ -1,0 +1,5 @@
+machine_key,machine_id,machine_name,machine_type,factory_id,machine_status,effective_date,expiry_date,is_current
+2,M002,Cutting Machine B,Cutting,F002,Active,2026-08-01,9999-12-31,t
+1,M001,Assembly Machine A,Assembly,F001,Active,2026-08-01,2026-08-14,f
+3,M001,Assembly Machine A,Assembly,F002,Active,2026-08-15,9999-12-31,t
+4,M003,Packaging Machine C,Packaging,F001,Active,2026-08-15,9999-12-31,t

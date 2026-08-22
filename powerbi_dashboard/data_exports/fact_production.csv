@@ -1,0 +1,5 @@
+production_key,production_id,date_key,product_key,machine_key,factory_key,employee_key,shift_key,quantity_produced,production_cost,production_time,defect_count
+1,PR001,20260801,1,1,1,1,1,100,25000.00,120,2
+2,PR002,20260801,2,2,2,2,2,80,15000.00,90,1
+3,PR003,20260815,1,3,2,1,1,110,27000.00,115,1
+4,PR004,20260815,2,4,1,2,2,95,18000.00,100,3
