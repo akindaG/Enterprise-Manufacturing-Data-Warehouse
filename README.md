@@ -2,229 +2,177 @@
 
 [![Milestone 5 ETL and SCD Demonstration](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml/badge.svg)](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml)
 
-## CCS3307 Data Warehousing Project
+Academic and portfolio-grade Data Warehouse implementation for **CCS3307 Data Warehousing**.
 
-A complete Data Warehouse implementation for the **Manufacturing domain**, demonstrating the complete lifecycle required for a Data Warehousing solution:
+The project demonstrates the complete Data Warehouse lifecycle required by the assignment:
 
 ```text
 Business Domain
-        ↓
+      ↓
 Business Requirements
-        ↓
+      ↓
 Source Systems
-        ↓
-Dimensional Modelling
-        ↓
+      ↓
+OLTP Database
+      ↓
+Staging Layer
+      ↓
 ETL Pipeline
-        ↓
-SCD Type 2 Historical Tracking
-        ↓
-Analytical Queries
-        ↓
-Business Insights
+      ↓
+Dimensional Model
+      ↓
+SCD Type 2
+      ↓
+Fact Loading
+      ↓
+Analytics
 ```
 
-## 1. Business Domain
+## Business Domain
 
 **Manufacturing Industry**
 
-## 2. Selected Business Process
+## Selected Business Process
 
 **Production Operations Analytics**
 
-The Data Warehouse focuses on manufacturing production events.
+The Data Warehouse analyses manufacturing production events. The selected process measures production quantity, cost, time, defects, machine performance, factory performance and shift performance.
 
-One fact record represents one completed production event for a product, machine, employee, shift and factory at a specific production date.
-
-The warehouse supports analysis of:
-
-- Production volume trends
-- Factory performance
-- Machine performance
-- Product performance
-- Production cost
-- Quality and defects
-- Historical machine changes
-
-## 3. Data Warehouse Design
+## Data Warehouse Design
 
 ### Fact Table
 
 `Fact_Production`
 
-### Grain
-
-One row represents one production event:
-
-```text
-One product produced
-by one machine
-handled by one employee
-in one shift
-at one factory
-on one production date
-```
+**Grain:** One row represents one completed production event for one product, produced by one machine, handled by one employee, during one shift, at one factory, on one production date.
 
 ### Dimensions
 
-- Dim_Date
-- Dim_Product
-- Dim_Machine
-- Dim_Factory
-- Dim_Employee
-- Dim_Shift
+- `Dim_Date`
+- `Dim_Product`
+- `Dim_Machine`
+- `Dim_Factory`
+- `Dim_Employee`
+- `Dim_Shift`
 
 ### Measures
 
-- Quantity_Produced
-- Production_Cost
-- Production_Time
-- Defect_Count
+- Quantity Produced
+- Production Cost
+- Production Time
+- Defect Count
 
-Generated analytical measures:
+Generated measures:
 
 - Good Quantity
 - Defect Rate
 - Cost Per Unit
-- Machine Efficiency
 
-## 4. Architecture
+## ETL Implementation
+
+Implemented pipeline:
 
 ```text
-Operational Source Data
+Source CSV Files
         ↓
 Staging Layer
         ↓
-Cleaning and Transformation
+Validation and Cleaning
+        ↓
+Transformation
         ↓
 Dimension Loading
         ↓
 SCD Type 2 Processing
         ↓
-Fact Loading
+Fact Production Loading
         ↓
-PostgreSQL Data Warehouse
-        ↓
-Analytics / Reporting
+Validation
 ```
 
-## 5. Technology Stack
+## SCD Type 2 Demonstration
 
-- Python 3.12
+`Dim_Machine` uses SCD Type 2.
+
+Two executions are demonstrated:
+
+| Execution | Scenario |
+|---|---|
+| Run 1 | Initial warehouse loading |
+| Run 2 | Changed machine assignment, new machine record and unchanged records |
+
+This demonstrates:
+
+- Historical records
+- Surrogate key changes
+- New records
+- Changed records
+- Unchanged records
+- Incremental loading
+
+## Technology Stack
+
+- PostgreSQL
+- Python
 - Pandas
 - SQLAlchemy
-- PostgreSQL
 - SQL
 - GitHub Actions
 - Power BI
 
-Technology was selected because it provides a reproducible, cost-free implementation suitable for demonstrating ETL, dimensional modelling, surrogate keys, SCD and analytical reporting.
-
-## 6. Slowly Changing Dimension Implementation
-
-`Dim_Machine` uses **SCD Type 2**.
-
-The pipeline demonstrates:
-
-### First ETL Execution
+## Repository Structure
 
 ```text
-M001 → Colombo Factory
-M002 → Kandy Factory
+oltp_database/       Source database scripts
+warehouse_database/  Star schema implementation
+source_data/         Run 1 and Run 2 source states
+etl_pipeline/        ETL implementation
+analytics/           Analytical SQL queries
+documentation/       Design and project documentation
+.github/             Automated validation workflow
 ```
 
-### Second ETL Execution
-
-```text
-M001 → Kandy Factory (Changed)
-M002 → Kandy Factory (Unchanged)
-M003 → Colombo Factory (New)
-```
-
-The previous M001 record remains in the warehouse while a new surrogate-key version becomes the current record.
-
-## 7. ETL Pipeline
-
-Implemented components:
-
-```text
-etl_pipeline/
-├── extract.py
-├── staging.py
-├── transform.py
-├── dimension_loader.py
-├── scd_type2.py
-├── fact_loader.py
-├── validation.py
-└── run_etl.py
-```
-
-The pipeline performs:
-
-1. Extract source data
-2. Load staging data
-3. Validate data quality
-4. Clean and transform data
-5. Load dimensions
-6. Generate surrogate keys
-7. Apply SCD logic
-8. Load Fact_Production
-9. Validate warehouse results
-
-## 8. Repository Structure
-
-```text
-.github/workflows/       Automated ETL verification
-documentation/           Design decisions and reports
-etl_pipeline/            ETL implementation
-oltp_database/           Operational database scripts
-source_data/             Run 1 and Run 2 source states
-warehouse_database/      Star schema implementation
-analytics/               Analytical SQL queries
-```
-
-## 9. Milestone Progress
+## Milestone Status
 
 | Milestone | Status |
 |---|---|
-| Milestone 1: Project Foundation | Complete |
-| Milestone 2: Requirements and Warehouse Design | Complete |
-| Milestone 3: Database Implementation | Complete |
-| Milestone 4: ETL Pipeline Development | Complete |
-| Milestone 5: Two ETL Runs and SCD Demonstration | Complete |
-| Milestone 6: Analytical Queries and Dashboard | In Progress |
+| 1. Project Foundation | Complete |
+| 2. Business Requirements and DW Design | Complete |
+| 3. OLTP and Warehouse Database Implementation | Complete |
+| 4. ETL Pipeline Development | Complete |
+| 5. Two ETL Runs and SCD Type 2 Demonstration | Complete |
+| 6. Analytical Queries and Dashboard Design | Complete |
+| 7. Final Report and Evidence Package | In Progress |
 
-## 10. Alignment With CCS3307 Requirements
+## Assignment Alignment
 
-This project demonstrates:
+The implementation satisfies the major CCS3307 requirements:
 
-✅ Selected business domain and business process
+✅ One selected business process
 
-✅ Single Fact Table design
+✅ One Fact Table
 
 ✅ Fact grain definition
-
-✅ Appropriate measures and generated measures
 
 ✅ Dimension modelling
 
 ✅ Surrogate keys
 
-✅ SCD Type 2 historical tracking
-
-✅ Source database documentation
+✅ SCD Type 2 implementation
 
 ✅ Staging layer
 
 ✅ ETL pipeline
 
-✅ Two pipeline executions with different source states
+✅ Two pipeline executions
 
-✅ Historical data preservation
+✅ Historical data demonstration
 
-✅ Analytical queries and business value demonstration
+✅ Analytical queries
 
-## 11. Execution
+✅ Business value demonstration
+
+## Execution
 
 Install dependencies:
 
@@ -232,22 +180,13 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run ETL:
+Run ETL executions:
 
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01
-```
-
-```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15
 ```
 
-Run analytical queries:
+## Current Stage
 
-```bash
-psql -U postgres -d manufacturing_dw -f analytics/production_kpi_analysis.sql
-```
-
-## Current Status
-
-Milestones 1-5 are completed. Milestone 6 dashboard implementation and final evidence preparation are in progress.
+Milestones 1-6 are completed. The remaining work is final report preparation, screenshots, Power BI evidence and submission packaging.
