@@ -2,170 +2,252 @@
 
 [![Milestone 5 ETL and SCD Demonstration](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml/badge.svg)](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml)
 
-Academic and portfolio-grade Data Warehouse implementation for **CCS3307 Data Warehousing**. The project demonstrates the complete lifecycle from business requirements and operational source data to dimensional modelling, ETL, Slowly Changing Dimensions, historical analysis and BI-ready data.
+## CCS3307 Data Warehousing Project
 
-## Business Domain
+A complete Data Warehouse implementation for the **Manufacturing domain**, demonstrating the complete lifecycle required for a Data Warehousing solution:
+
+```text
+Business Domain
+        ↓
+Business Requirements
+        ↓
+Source Systems
+        ↓
+Dimensional Modelling
+        ↓
+ETL Pipeline
+        ↓
+SCD Type 2 Historical Tracking
+        ↓
+Analytical Queries
+        ↓
+Business Insights
+```
+
+## 1. Business Domain
 
 **Manufacturing Industry**
 
-### Selected Business Process
+## 2. Selected Business Process
 
 **Production Operations Analytics**
 
-The warehouse analyses completed manufacturing production events, including production volume, production cost, production time, defects, machine performance, factory performance and shift performance.
+The Data Warehouse focuses on manufacturing production events.
 
-## Architecture
+One fact record represents one completed production event for a product, machine, employee, shift and factory at a specific production date.
 
-```mermaid
-flowchart LR
-    A[Operational Source Data] --> B[Staging Tables]
-    B --> C[Python ETL and Data Quality]
-    C --> D[Dimension Loading]
-    D --> E[SCD Type 2 Processing]
-    E --> F[Fact Loading and Surrogate Key Resolution]
-    F --> G[(PostgreSQL Data Warehouse)]
-    G --> H[SQL Analytics]
-    G --> I[Power BI - Milestone 6]
-```
+The warehouse supports analysis of:
 
-Minimum implemented flow:
+- Production volume trends
+- Factory performance
+- Machine performance
+- Product performance
+- Production cost
+- Quality and defects
+- Historical machine changes
 
-```text
-Source Data -> Staging -> Transformation -> Dimensions -> SCD Type 2 -> Fact_Production -> Validation -> Analytics
-```
-
-## Dimensional Model
+## 3. Data Warehouse Design
 
 ### Fact Table
 
 `Fact_Production`
 
-**Grain:** one row represents one completed production event for one product, produced by one machine, handled by one employee, during one shift, at one factory, on one production date.
+### Grain
 
-`Production_ID` is retained in the fact table as a **degenerate dimension / source transaction identifier**. It provides traceability and guarantees idempotent incremental loading without creating a separate production-order dimension.
+One row represents one production event:
+
+```text
+One product produced
+by one machine
+handled by one employee
+in one shift
+at one factory
+on one production date
+```
 
 ### Dimensions
 
-- `Dim_Date`
-- `Dim_Product`
-- `Dim_Machine`
-- `Dim_Factory`
-- `Dim_Employee`
-- `Dim_Shift`
+- Dim_Date
+- Dim_Product
+- Dim_Machine
+- Dim_Factory
+- Dim_Employee
+- Dim_Shift
 
-### Core Measures
+### Measures
 
-| Measure | Type | Purpose |
-|---|---|---|
-| `Quantity_Produced` | Additive | Production volume |
-| `Production_Cost` | Additive | Manufacturing cost |
-| `Production_Time` | Additive across production events | Total production minutes |
-| `Defect_Count` | Additive | Defective units |
+- Quantity_Produced
+- Production_Cost
+- Production_Time
+- Defect_Count
 
-Derived analytics in the reporting layer can include `Good_Quantity`, `Defect_Rate` and `Cost_Per_Unit`.
+Generated analytical measures:
 
-## Slowly Changing Dimension Strategy
+- Good Quantity
+- Defect Rate
+- Cost Per Unit
+- Machine Efficiency
 
-`Dim_Machine` uses **SCD Type 2** so machine assignment changes are historically preserved. Each changed machine receives a new surrogate key while the previous row is expired using `Effective_Date`, `Expiry_Date` and `Is_Current`.
-
-Milestone 5 demonstrates:
+## 4. Architecture
 
 ```text
-Run 1: M001 -> F001, M002 -> F002
-Run 2: M001 -> F002 (changed), M002 -> F002 (unchanged), M003 -> F001 (new)
+Operational Source Data
+        ↓
+Staging Layer
+        ↓
+Cleaning and Transformation
+        ↓
+Dimension Loading
+        ↓
+SCD Type 2 Processing
+        ↓
+Fact Loading
+        ↓
+PostgreSQL Data Warehouse
+        ↓
+Analytics / Reporting
 ```
 
-Historical facts resolve the correct `Machine_Key` using the production date.
+## 5. Technology Stack
 
-## Technology Stack
-
-- PostgreSQL 16
 - Python 3.12
 - Pandas
 - SQLAlchemy
-- psycopg2
+- PostgreSQL
 - SQL
 - GitHub Actions
-- Power BI for the analytics dashboard milestone
+- Power BI
 
-## Repository Structure
+Technology was selected because it provides a reproducible, cost-free implementation suitable for demonstrating ETL, dimensional modelling, surrogate keys, SCD and analytical reporting.
+
+## 6. Slowly Changing Dimension Implementation
+
+`Dim_Machine` uses **SCD Type 2**.
+
+The pipeline demonstrates:
+
+### First ETL Execution
 
 ```text
-.github/workflows/       Automated ETL and SCD verification
-analytics/               Analytical and validation SQL
-documentation/           Business, modelling and milestone documentation
-etl_pipeline/            Python ETL implementation and orchestrator
-oltp_database/           Operational source schema and sample data
-source_data/             Reproducible Run 1 and Run 2 source states
-warehouse_database/      Star-schema DDL
-requirements.txt         Python dependencies
-README.md                Project overview and execution guide
+M001 → Colombo Factory
+M002 → Kandy Factory
 ```
 
-## Development Roadmap
+### Second ETL Execution
 
-| Milestone | Deliverable | Status |
-|---|---|---|
-| 1 | Project foundation and repository setup | Complete |
-| 2 | Business requirements and dimensional design | Complete |
-| 3 | OLTP and Data Warehouse database implementation | Complete |
-| 4 | ETL pipeline development | Complete |
-| 5 | Two-run ETL, incremental loading and SCD Type 2 demonstration | Complete |
-| 6 | Analytical SQL, Power BI dashboard and business insights | Next |
-| 7 | Final report, evidence pack and portfolio polish | Planned |
+```text
+M001 → Kandy Factory (Changed)
+M002 → Kandy Factory (Unchanged)
+M003 → Colombo Factory (New)
+```
 
-## Run the Project
+The previous M001 record remains in the warehouse while a new surrogate-key version becomes the current record.
 
-### 1. Install dependencies
+## 7. ETL Pipeline
+
+Implemented components:
+
+```text
+etl_pipeline/
+├── extract.py
+├── staging.py
+├── transform.py
+├── dimension_loader.py
+├── scd_type2.py
+├── fact_loader.py
+├── validation.py
+└── run_etl.py
+```
+
+The pipeline performs:
+
+1. Extract source data
+2. Load staging data
+3. Validate data quality
+4. Clean and transform data
+5. Load dimensions
+6. Generate surrogate keys
+7. Apply SCD logic
+8. Load Fact_Production
+9. Validate warehouse results
+
+## 8. Repository Structure
+
+```text
+.github/workflows/       Automated ETL verification
+documentation/           Design decisions and reports
+etl_pipeline/            ETL implementation
+oltp_database/           Operational database scripts
+source_data/             Run 1 and Run 2 source states
+warehouse_database/      Star schema implementation
+analytics/               Analytical SQL queries
+```
+
+## 9. Milestone Progress
+
+| Milestone | Status |
+|---|---|
+| Milestone 1: Project Foundation | Complete |
+| Milestone 2: Requirements and Warehouse Design | Complete |
+| Milestone 3: Database Implementation | Complete |
+| Milestone 4: ETL Pipeline Development | Complete |
+| Milestone 5: Two ETL Runs and SCD Demonstration | Complete |
+| Milestone 6: Analytical Queries and Dashboard | In Progress |
+
+## 10. Alignment With CCS3307 Requirements
+
+This project demonstrates:
+
+✅ Selected business domain and business process
+
+✅ Single Fact Table design
+
+✅ Fact grain definition
+
+✅ Appropriate measures and generated measures
+
+✅ Dimension modelling
+
+✅ Surrogate keys
+
+✅ SCD Type 2 historical tracking
+
+✅ Source database documentation
+
+✅ Staging layer
+
+✅ ETL pipeline
+
+✅ Two pipeline executions with different source states
+
+✅ Historical data preservation
+
+✅ Analytical queries and business value demonstration
+
+## 11. Execution
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Create the warehouse tables
-
-```bash
-psql -U postgres -d manufacturing_dw -f warehouse_database/dimension_tables.sql
-psql -U postgres -d manufacturing_dw -f warehouse_database/fact_tables.sql
-psql -U postgres -d manufacturing_dw -f warehouse_database/warehouse_schema.sql
-```
-
-### 3. Execute the first source state
+Run ETL:
 
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01
 ```
 
-### 4. Execute the changed source state
-
 ```bash
 python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15
 ```
 
-### 5. Verify SCD history and fact relationships
+Run analytical queries:
 
 ```bash
-psql -U postgres -d manufacturing_dw -f analytics/scd_verification.sql
+psql -U postgres -d manufacturing_dw -f analytics/production_kpi_analysis.sql
 ```
 
-Set `DATABASE_URL` if the database connection differs from the default used by the ETL.
+## Current Status
 
-## Automated Quality Verification
-
-The GitHub Actions workflow provisions PostgreSQL and automatically verifies:
-
-- two successful ETL executions
-- changed, unchanged and new dimension records
-- two SCD Type 2 versions for M001
-- correct old and current factory assignments
-- four incrementally loaded production facts
-- four unique `Production_ID` values
-- historical fact-to-machine surrogate-key correctness
-
-## Data Quality and Incremental Loading
-
-The ETL validates required columns, source business keys, duplicate production identifiers, non-negative measures and the rule that `Defect_Count <= Quantity_Produced`. Facts are de-duplicated by `Production_ID`, making reruns safe and preserving legitimate production events even when their dimensional context and measures are identical.
-
-## Current Focus
-
-Milestones 1 to 5 are implemented. The next stage is **Milestone 6: analytical SQL and the Power BI dashboard**.
+Milestones 1-5 are completed. Milestone 6 dashboard implementation and final evidence preparation are in progress.
