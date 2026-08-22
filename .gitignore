@@ -4,13 +4,17 @@ __pycache__/
 *.venv/
 venv/
 .env
+.env.*
 
-# Database
+# Database backups and local exports
 *.sql.bak
 *.dump
 
-# Power BI
-*.pbix
+# Power BI temporary/local state
+# Keep final .pbix files versioned as project deliverables.
+~$*.pbix
+*.pbix.tmp
+.pbi/
 
 # OS
 .DS_Store

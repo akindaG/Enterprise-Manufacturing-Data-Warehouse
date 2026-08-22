@@ -1,4 +1,4 @@
--- Milestone 5: SCD Type 2 and ETL execution verification
+-- Milestone 5: SCD Type 2, incremental-load and fact-idempotency verification
 
 -- 1. Verify both ETL executions were logged.
 SELECT run_id, executed_at, run_date, source_dir, status,
@@ -33,6 +33,7 @@ WHERE machine_id = 'M003';
 -- 5. Verify fact rows reference the correct historical machine version.
 SELECT
     f.production_key,
+    f.production_id,
     d.full_date AS production_date,
     m.machine_key,
     m.machine_id,
@@ -50,7 +51,20 @@ JOIN dim_factory fac ON fac.factory_key = f.factory_key
 JOIN dim_product p ON p.product_key = f.product_key
 ORDER BY d.full_date, f.production_key;
 
--- 6. Historical comparison for M001 before and after the factory transfer.
+-- 6. Verify Production_ID is unique and suitable for incremental-load idempotency.
+SELECT
+    COUNT(*) AS fact_rows,
+    COUNT(DISTINCT production_id) AS distinct_production_ids
+FROM fact_production;
+
+SELECT production_id, COUNT(*) AS duplicate_count
+FROM fact_production
+GROUP BY production_id
+HAVING COUNT(*) > 1;
+
+-- Expected: 4 fact rows, 4 distinct Production_ID values, and zero duplicate rows.
+
+-- 7. Historical comparison for M001 before and after the factory transfer.
 SELECT
     d.full_date,
     m.machine_id,
