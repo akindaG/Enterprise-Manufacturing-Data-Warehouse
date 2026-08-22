@@ -307,6 +307,6 @@ Remaining:
 
 ## Author
 
-**Akinda Gamage**
+**Akinda Gunarathne**
 
 CCS3307 Data Warehousing Project
