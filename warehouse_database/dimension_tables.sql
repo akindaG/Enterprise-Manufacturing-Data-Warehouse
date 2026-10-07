@@ -1,4 +1,4 @@
--- Data Warehouse Dimension Tables
+-- Dimension tables for the Enterprise Manufacturing Data Platform
 
 CREATE TABLE Dim_Date (
     Date_Key INT PRIMARY KEY,
@@ -10,7 +10,7 @@ CREATE TABLE Dim_Date (
 );
 
 CREATE TABLE Dim_Product (
-    Product_Key INT PRIMARY KEY,
+    Product_Key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Product_ID VARCHAR(20) NOT NULL UNIQUE,
     Product_Name VARCHAR(100) NOT NULL,
     Category VARCHAR(50) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE Dim_Product (
 );
 
 CREATE TABLE Dim_Machine (
-    Machine_Key INT PRIMARY KEY,
+    Machine_Key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Machine_ID VARCHAR(20) NOT NULL,
     Machine_Name VARCHAR(100) NOT NULL,
     Machine_Type VARCHAR(50) NOT NULL,
@@ -31,13 +31,12 @@ CREATE TABLE Dim_Machine (
     CONSTRAINT uq_dim_machine_version UNIQUE (Machine_ID, Effective_Date)
 );
 
--- Only one current SCD Type 2 row may exist for a machine business key.
 CREATE UNIQUE INDEX ux_dim_machine_current
 ON Dim_Machine (Machine_ID)
 WHERE Is_Current = TRUE;
 
 CREATE TABLE Dim_Factory (
-    Factory_Key INT PRIMARY KEY,
+    Factory_Key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Factory_ID VARCHAR(20) NOT NULL UNIQUE,
     Factory_Name VARCHAR(100) NOT NULL,
     Location VARCHAR(100) NOT NULL,
@@ -45,7 +44,7 @@ CREATE TABLE Dim_Factory (
 );
 
 CREATE TABLE Dim_Employee (
-    Employee_Key INT PRIMARY KEY,
+    Employee_Key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Employee_ID VARCHAR(20) NOT NULL UNIQUE,
     Employee_Name VARCHAR(100) NOT NULL,
     Department VARCHAR(50) NOT NULL,
@@ -53,7 +52,7 @@ CREATE TABLE Dim_Employee (
 );
 
 CREATE TABLE Dim_Shift (
-    Shift_Key INT PRIMARY KEY,
+    Shift_Key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Shift_ID VARCHAR(20) NOT NULL UNIQUE,
     Shift_Name VARCHAR(50) NOT NULL,
     Start_Time TIME NOT NULL,

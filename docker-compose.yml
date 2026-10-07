@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: manufacturing_dw
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d manufacturing_dw"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./warehouse_database/staging_tables.sql:/docker-entrypoint-initdb.d/01_staging.sql:ro
+      - ./warehouse_database/dimension_tables.sql:/docker-entrypoint-initdb.d/02_dimensions.sql:ro
+      - ./warehouse_database/fact_tables.sql:/docker-entrypoint-initdb.d/03_facts.sql:ro
+      - ./warehouse_database/warehouse_schema.sql:/docker-entrypoint-initdb.d/04_relationships.sql:ro
+      - ./warehouse_database/indexes.sql:/docker-entrypoint-initdb.d/05_indexes.sql:ro
+      - ./warehouse_database/analytics_views.sql:/docker-entrypoint-initdb.d/06_views.sql:ro
+
+  etl-demo:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/manufacturing_dw
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >-
+      sh -c "python etl_pipeline/run_etl.py --source-dir source_data/run_1 --run-date 2026-08-01 &&
+             python etl_pipeline/run_etl.py --source-dir source_data/run_2 --run-date 2026-08-15"
+
+  dashboard:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/manufacturing_dw
+    depends_on:
+      etl-demo:
+        condition: service_completed_successfully
+    ports:
+      - "8501:8501"
+    command: streamlit run dashboard/app.py --server.address=0.0.0.0 --server.port=8501
+
+volumes:
+  postgres_data:
