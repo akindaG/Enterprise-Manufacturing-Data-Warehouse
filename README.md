@@ -1,12 +1,23 @@
+<div align="center">
+
 # Enterprise Manufacturing Data Warehouse
 
-[![Milestone 5 ETL and SCD Demonstration](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml/badge.svg)](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml)
+### End-to-end dimensional warehouse with incremental ETL, SCD Type 2, analytical SQL, and automated validation
 
-An end-to-end **CCS3307 Data Warehousing** implementation for **Enterprise Manufacturing Production Operations Analytics**. The repository covers business requirements, operational source design, dimensional modelling, staging, ETL, surrogate keys, Slowly Changing Dimension Type 2, two changed source states, incremental fact loading, historical validation and analytical SQL.
+[![ETL + SCD CI](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml/badge.svg)](https://github.com/akindaG/Enterprise-Manufacturing-Data-Warehouse/actions/workflows/milestone5-etl-demo.yml)
+![Python](https://img.shields.io/badge/Python-ETL-3776AB?style=flat-square&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Model](https://img.shields.io/badge/Model-Kimball_Star_Schema-0F766E?style=flat-square)
+![History](https://img.shields.io/badge/History-SCD_Type_2-7C3AED?style=flat-square)
 
-**Author:** Akinda Gunarathne
+</div>
 
-> Core Data Warehouse implementation: complete. Final visual submission artifacts still to be authored/captured: Power BI `.pbix`, real screenshots, final PDF/presentation and ZIP package.
+This project implements a complete **manufacturing production analytics warehouse**. It demonstrates operational-source design, staging, dimensional modeling, surrogate-key management, SCD Type 2 history, incremental fact loading, analytical SQL, and CI-based validation.
+
+> **Portfolio role:** my strongest current evidence for Data Engineering. The core warehouse implementation and automated verification are complete. BI/evidence artifacts are documented separately from the pipeline itself.
+
+**Author:** Akinda Gunarathne  
+**Academic context:** CCS3307 Data Warehousing
 
 ---
 
