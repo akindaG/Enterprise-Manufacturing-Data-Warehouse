@@ -1,12 +1,20 @@
-"""Extract layer for Manufacturing Data Warehouse ETL."""
+"""Source extraction for reproducible manufacturing snapshots."""
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import pandas as pd
 
-
-def extract_csv(file_path):
-    """Extract data from CSV source systems."""
-    return pd.read_csv(file_path)
+from etl_pipeline.config import FILES
 
 
-if __name__ == "__main__":
-    print("Extraction module ready")
+def extract_source_state(source_dir: Path) -> dict[str, pd.DataFrame]:
+    """Read every required CSV from one source-state directory."""
+    data: dict[str, pd.DataFrame] = {}
+    for entity, filename in FILES.items():
+        path = source_dir / filename
+        if not path.exists():
+            raise FileNotFoundError(f"Missing source file: {path}")
+        data[entity] = pd.read_csv(path)
+    return data
